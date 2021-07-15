@@ -49,11 +49,11 @@ vagrant up
 vagrant ssh
 ```
 ## Get list of easy commands
-Execute the following command inside your vagrant:
+Execute the following command inside your vagrant and you will se shorthand commands to start, stop, show the kubernetes containers in their respective namespace:
 ```
 pleh
 ```
-## shutting down the Vagrant
+## Shutting down the Vagrant
 ```
 vagrant halt
 ```
@@ -63,4 +63,4 @@ We advise to add the auto generated CA certificate to your
 trust store. The certificate wil be located in **/pki/ca.crt** after first startup.
 
 ## Browser access
-You can access the project's environment via https://[application].sparkdev.ilionx.cloud For example [spark](https://spark.sparkdev.ilionx.cloud)
+You can access the project's environment via https://[application].sparkdev.ilionx.cloud
