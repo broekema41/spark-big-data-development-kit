@@ -11,6 +11,8 @@ currently has the following stack:
 
 ![stack](/stack.gif)
 
+We assume intermediate level knowledge of [kubernetes](https://minikube.sigs.k8s.io/) with [helm](https://helm.sh/) for you to be comfortable navigating, extending, developing with this setup.
+
 ## Required software
 In order to use this Vagrant image, you need to have some software installed. The versions below are known to work:
 * Oracle VM VirtualBox 6.X.XX (https://www.virtualbox.org/wiki/Downloads)
@@ -52,7 +54,9 @@ vagrant ssh
 Execute the following command inside your vagrant and you will se shorthand commands to start, stop, show the kubernetes containers in their respective namespace:
 ```
 pleh
-```
+``` 
+![commands](/commands.png)
+
 ## Shutting down the Vagrant
 ```
 vagrant halt
