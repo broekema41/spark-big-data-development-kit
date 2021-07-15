@@ -1,0 +1,19 @@
+# Define the runmode of the frontend
+# options:
+#   - host: Run frontend on the host machine (npm start) and have it listen on port 4200
+#   - source: Run the frontend in minukube using the npm server (npm start)
+#   - target: Run the frontend in minikube by serving the built frontend in apache
+#   - release: Run the frontend in minkube from release docker image
+
+dockerconfig:
+  auths: []
+
+# Create a values.yaml containing the following and pass it to the chart with the --values parameter. These values will be merged at runtime.
+# dockerconfig:
+#   auths:
+#     - registry: "url.to.registry"
+#       username: user
+#       password: changeme
+#     - registry: "url.to.another.registry"
+#       username: user2
+#       password: changemetoo

@@ -1,0 +1,117 @@
+- hosts: all
+  tasks:
+
+    # Certificate needs to be valid more than 5 days, but less than 824 days or macOS will reject it
+    - name: Check if certificate star.sparkvagrant.cloud.crt needs renewal
+      openssl_certificate_info:
+        path: /vagrant/pki/star.sparkvagrant.cloud.crt
+        valid_at:
+          renewal_day: "+5d"
+          too_far_in_future: "+824d"
+      register: validity_check
+
+    # If not found to be valid above, generate a new certificate here, valid for another 92 days
+    - name: Renew certificate star.sparkvagrant.cloud.crt if it expires in the next few days or is valid for too long
+      openssl_certificate:
+        path: /vagrant/pki/star.sparkvagrant.cloud.crt
+        csr_path: /vagrant/pki/star.sparkvagrant.cloud.csr
+        ownca_path: /vagrant/pki/ca.crt
+        ownca_privatekey_path: /vagrant/pki/ca.key
+        ownca_not_after: "+92d"
+        provider: ownca
+        force: true
+      when: not validity_check.valid_at.renewal_day or validity_check.valid_at.too_far_in_future
+
+    - block:
+      # Execute all tasks for the Docker login with username/password/client certificate
+      # Note: "no_log: true" makes sure not to print the password in clear text in case of a failure
+
+      - name: Configure dnsmasq as DNS server inside the vagrant
+        copy:
+          dest: /etc/resolv.conf
+          content: |
+            search sparkdev.ilionx.cloud
+            nameserver 172.28.127.137
+        become: yes
+
+      - name: Load docker registry credentials from the regcred.dockerconfig.yaml file
+        include_vars:
+          file: /vagrant/provisioning/regcred.dockerconfig.yaml
+          name: regcred
+
+      - name: Load docker registry template credentials from the template-regcred.dockerconfig.yaml file
+        include_vars:
+          file: /vagrant/provisioning/template-regcred.dockerconfig.yaml
+          name: template_regcred
+
+      - name: Install helm chart for k8s registry authentication
+        shell: /home/vagrant/bin/helm delete regcred; /home/vagrant/bin/helm install regcred /vagrant/helm/regcred --replace --values /vagrant/provisioning/regcred.dockerconfig.yaml
+        changed_when: no
+
+      - name: Create registry directories for each docker registry in /etc/docker/certs.d
+        file:
+          path: /etc/docker/certs.d/{{ item.registry }}
+          state: directory
+          owner: root
+          group: root
+          mode: '0644'
+        loop: "{{ regcred.dockerconfig.auths }}"
+        no_log: false
+        become: true
+        when: item.ssl_client_auth == true
+
+      - name: Copy client certificate for each docker registry in /etc/docker/certs.d
+        copy:
+          src: /vagrant/hawaiicert/client.cert
+          dest: /etc/docker/certs.d/{{ item.registry }}/client.cert
+          owner: root
+          group: root
+          mode: '0644'
+        loop: "{{ regcred.dockerconfig.auths }}"
+        no_log: false
+        become: true
+        when: item.ssl_client_auth == true
+
+      - name: Copy client key for each docker registry in /etc/docker/certs.d
+        copy:
+          src: /vagrant/hawaiicert/client.key
+          dest: /etc/docker/certs.d/{{ item.registry }}/client.key
+          owner: root
+          group: root
+          mode: '0644'
+        loop: "{{ regcred.dockerconfig.auths }}"
+        no_log: false
+        become: true
+        when: item.ssl_client_auth == true
+
+#      - name: Execute docker login for each registry
+#        shell: 'echo "{{ item.password }}" | docker login {{ item.registry }} --username "{{ item.username }}" --password-stdin'
+#        loop: "{{ regcred.dockerconfig.auths }}"
+#        no_log: false
+
+
+      - name: Install helm chart for k8s registry authentication
+        shell: /home/vagrant/bin/helm delete regcred; /home/vagrant/bin/helm install regcred /vagrant/helm/regcred --replace --values /vagrant/provisioning/regcred.dockerconfig.yaml
+        changed_when: no
+
+      - name: Print a warning when registry credentials need to be updated
+        vars:
+          msg: |
+            Your registry credentials need updating (there are {{template_regcred.dockerconfig.auths|length}} templates, you have {{regcred.dockerconfig.auths|length}}). You need to update your vagrant as follows:
+            - Stop your vagrant image with: vagrant halt
+            - Run script ./hawaiicert/create_certificate.sh with bash, choosing option 2) Update credentials
+            - Start vagrant again with: vagrant up
+        debug:
+          msg: "{{ msg.split('\n') }}"
+        when: template_regcred.dockerconfig.auths|length != regcred.dockerconfig.auths|length
+
+      rescue:
+
+      # The following will be executed in case of a failure in the block above
+
+      - name: Print error message
+        vars:
+          msg: |
+            On-boot provisioning failed.
+        debug:
+          msg: "{{ msg.split('\n') }}"

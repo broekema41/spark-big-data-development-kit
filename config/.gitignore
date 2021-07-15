@@ -1,0 +1,4 @@
+# Ignore all files values.yaml in this directory.
+# The idea here is that users overwrite these with their own values when needed.
+# But therefore they should never be checked in!
+values.yaml

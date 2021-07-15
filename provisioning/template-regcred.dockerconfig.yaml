@@ -1,0 +1,7 @@
+dockerconfig:
+  authIgnore: true
+  auths:
+    - registry: 'xxxxx'
+      username: 'xxxxx'
+      password: 'xxxxx'
+      ssl_client_auth: false

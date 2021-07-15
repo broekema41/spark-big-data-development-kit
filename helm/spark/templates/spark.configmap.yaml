@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-reverseproxy-vhosts-configmap
+data:
+  http80-{{ .Release.Name }}.sparkvagrant.cloud.conf: |
+    {{- include "template.file-reverseproxy-http80.conf" . | nindent 4 }}
+  https443-{{ .Release.Name }}.sparkvagrant.cloud.conf: |
+    {{- include "template.file-reverseproxy-https443.conf" . | nindent 4 }}

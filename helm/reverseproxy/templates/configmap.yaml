@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-vhosts-configmap
+data:
+  000-default-reverseproxy-http80.conf: |
+    {{- include "template.file-000-default-reverseproxy-http80.conf" . | nindent 4 }}
+  000-default-reverseproxy-https443.conf: |
+    {{- include "template.file-000-default-reverseproxy-https443.conf" . | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-index
+data:
+  index.html: |
+    {{ .Files.Get "index.html" | nindent 4 }}

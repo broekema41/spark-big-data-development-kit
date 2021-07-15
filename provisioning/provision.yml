@@ -1,0 +1,175 @@
+- hosts: all
+  tasks:
+    - name: Make sure kubelet is stopped before changing docker config
+      service:
+        name: kubelet
+        state: stopped
+
+    - name: Make sure docker is stopped before changing docker config
+      service:
+        name: docker
+        state: stopped
+
+    - name: Create docker daemon config file to use extra disk docker_storage in direct-lvm mode
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "storage-driver": "devicemapper",
+            "storage-opts": [
+              "dm.directlvm_device=/dev/sdb",
+              "dm.thinp_percent=95",
+              "dm.thinp_metapercent=1",
+              "dm.thinp_autoextend_threshold=80",
+              "dm.thinp_autoextend_percent=20",
+              "dm.directlvm_device_force=true",
+              "dm.basesize=50G"
+            ]
+          }
+
+    - name: Start docker service after config change
+      service:
+        name: docker
+        state: started
+
+    - name: Start kubelet service after docker config change
+      service:
+        name: kubelet
+        state: started
+
+    - name: Set timezone to Europe/Amsterdam
+      timezone:
+        name: Europe/Amsterdam
+
+    - name: Install yum packages
+      yum:
+        name: ["jq", "dnsmasq"]
+        state: present
+
+    - name: Configure dnsmasq to resolve vagrant hostnames locally
+      copy:
+        dest: /etc/dnsmasq.conf
+        content: |
+          port=53
+          server=8.8.8.8
+          server=8.8.4.4
+          address=/.sparkdev.ilionx.cloud/172.28.127.137
+          address=/sparkdev.ilionx.cloud/172.28.127.137
+
+    - name: Restart dnsmasq for the config to be applied
+      service:
+        name: dnsmasq
+        state: restarted
+        enabled: yes
+
+    - name: Configure dnsmasq as DNS server inside the vagrant
+      copy:
+        dest: /etc/resolv.conf
+        content: |
+          search sparkdev.ilionx.cloud
+          nameserver 172.28.127.137
+
+    - name: Add sourcing of all projects' .bashrc to main .bashrc
+      lineinfile:
+        path: /home/vagrant/.bashrc
+        line: source <(find /vagrant/environment/ -name .bashrc -exec cat {} \;)
+        insertafter: EOF
+
+    - name: Add pleh to shell login
+      lineinfile:
+        path: /home/vagrant/.bash_profile
+        line: 'echo -e "Welcome to spark-vagrant [0m! For help, type \e[91mpleh\e[0m or \e[91mpleh \e[94m<project name>\e[0m."'
+        insertafter: EOF
+
+    - name: Wait for kubernetes api server to come up (due to docker restart) before executing helm
+      uri:
+        url: https://localhost:8443
+        status_code: 403
+        timeout: 5
+        return_content: no
+      retries: 60
+      delay: 10
+      register: result_url_check
+      until: result_url_check.status == 403
+
+    # Install credentials for our private registry
+    - name: Install helm chart for k8s registry authentication
+      shell: /home/vagrant/bin/helm delete regcred; /home/vagrant/bin/helm install regcred /vagrant/helm/regcred --replace --values /vagrant/provisioning/regcred.dockerconfig.yaml
+      changed_when: no
+
+    - name: Install PKI - generate ca.key
+      openssl_privatekey:
+        path: /vagrant/pki/ca.key
+        mode: 0755
+
+    - name: Install PKI - generate ca.csr
+      openssl_csr:
+        path: /vagrant/pki/ca.csr
+        privatekey_path: /vagrant/pki/ca.key
+        subject:
+          C: NL
+          ST: Limburg
+          L: Berg en Terblijt
+          O: Semantize
+          OU: Semantize
+          CN: "Vagrant CA"
+        basic_constraints:
+          - 'CA:TRUE'
+
+    - name: Install PKI - sign ca.csr -> ca.crt
+      openssl_certificate:
+        path: /vagrant/pki/ca.crt
+        privatekey_path: /vagrant/pki/ca.key
+        csr_path: /vagrant/pki/ca.csr
+        provider: selfsigned
+
+    - name: Install PKI - generate star.sparkvagrant.cloud.key
+      openssl_privatekey:
+        path: /vagrant/pki/star.sparkvagrant.cloud.key
+        mode: 0755
+
+    - name: Install PKI - generate star.sparkvagrant.cloud.csr
+      openssl_csr:
+        path: /vagrant/pki/star.sparkvagrant.cloud.csr
+        privatekey_path: /vagrant/pki/star.sparkvagrant.cloud.key
+        subject:
+          C: NL
+          ST: Limburg
+          L: Berg en Terblijt
+          O: Semantize
+          OU: Semantize
+          CN: "*.sparkdev.ilionx.cloud"
+        subject_alt_name: "DNS:*.sparkdev.ilionx.cloud,DNS:sparkdev.ilionx.cloud,IP:172.28.127.137"
+        extended_key_usage:
+          - serverAuth
+
+    - name: Install PKI - sign star.sparkvagrant.cloud.csr -> star.sparkvagrant.cloud.crt
+      openssl_certificate:
+        path: /vagrant/pki/star.sparkvagrant.cloud.crt
+        csr_path: /vagrant/pki/star.sparkvagrant.cloud.csr
+        ownca_path: /vagrant/pki/ca.crt
+        ownca_privatekey_path: /vagrant/pki/ca.key
+        ownca_not_after: "+92d"
+        provider: ownca
+
+    - name: Create dir /data/jenkins/jenkins_home
+      file:
+        path: /data/jenkins/jenkins_home
+        state: directory
+
+    - name: Create dir /data/reverseproxy/vhosts
+      file:
+        path: /data/reverseproxy/vhosts
+        state: directory
+        mode: "775"
+
+    # Install reverse proxy
+    - name: Install helm chart for reverseproxy
+      shell: /home/vagrant/bin/helm delete reverseproxy; /home/vagrant/bin/helm install reverseproxy /vagrant/helm/reverseproxy
+      changed_when: no
+
+    - name: Install yum packages for sdkman
+      yum:
+        name: ["zip", "unzip"]
+        state: present
+
