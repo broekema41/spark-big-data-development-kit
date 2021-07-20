@@ -72,6 +72,8 @@ spec:
           env: []
           workingDir: /data
           volumeMounts:
+            - name: spark-dags
+              mountPath: /projects/spark/dags
             - name: host-vhosts
               mountPath: /data/reverseproxy-vhosts
             - name: config-reverseproxy-vhosts
@@ -92,12 +94,17 @@ spec:
 #                    rm -f  /data/reverseproxy-vhosts/https443-{{ .Release.Name }}.sparkvagrant.cloud.conf
           ports:
             - containerPort: {{ .Values.Master.ContainerPort }}
+              hostPort: {{ .Values.Master.ContainerPort }}
+              protocol: TCP
+              name: spark-7077  
             - containerPort: {{ .Values.WebUi.ContainerPort }}
           resources:
             requests:
               cpu: "{{ .Values.Master.Cpu }}"
               memory: "{{ .Values.Master.Memory }}"
           volumeMounts:
+            - name: spark-dags
+              mountPath: /projects/spark/dags
             - name: host-vhosts
               mountPath: /data/reverseproxy-vhosts
           env:
@@ -113,6 +120,10 @@ spec:
         - name: config-reverseproxy-vhosts
           configMap:
             name: {{ .Release.Name }}-reverseproxy-vhosts-configmap
+        - name: spark-dags
+          hostPath:
+            path: /projects/spark/dags
+            type: Directory
         - name: host-vhosts
           hostPath:
             path: /data/reverseproxy/vhosts

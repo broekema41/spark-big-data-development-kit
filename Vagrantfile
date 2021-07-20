@@ -45,6 +45,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.network "private_network", ip: "172.28.127.137"
+  config.vm.network "forwarded_port", guest: 7077, host: 7077 # spark master port in not http or proxyable
 
   # Mount repos of supported projects
   config.vm.synced_folder "..", "/projects", type: "nfs", nfs_version: $nfsver, mount_options: [ "nolock", "fsc" ]
