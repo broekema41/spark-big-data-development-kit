@@ -162,10 +162,8 @@ spec:
               subPath: airflow_local_settings.py
               readOnly: true
 {{- end }}
-{{- if or (and .Values.dags.gitSync.enabled (semverCompare "<2.0.0" .Values.airflowVersion)) .Values.dags.persistence.enabled }}
             - name: dags
               mountPath: {{ template "airflow_dags_mount_path" . }}
-{{- end }}
 {{- if .Values.logs.persistence.enabled }}
             - name: logs
               mountPath: {{ template "airflow_logs" . }}
@@ -236,6 +234,11 @@ spec:
         {{- if  .Values.dags.gitSync.sshKeySecret }}
         {{- include "git_sync_ssh_key_volume" . | indent 8 }}
         {{- end }}
+        {{- else if (.Values.dagsHome) }}
+        - name: dags
+          hostPath:
+            path: {{.Values.dagsHome}}
+            type: Directory
         {{- end }}
         {{- if .Values.logs.persistence.enabled }}
         - name: logs

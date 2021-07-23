@@ -34,6 +34,11 @@ spec:
             requests:
               cpu: "{{ .Values.Worker.Cpu }}"
               memory: "{{ .Values.Worker.Memory }}"
+          volumeMounts:
+            - name: spark-dags
+              mountPath: /var/www/spark/dags
+            - name: spark-files
+              mountPath: /var/www/spark/files
           env:
           - name: SPARK_DAEMON_MEMORY
             value: {{ default "1g" .Values.Worker.DaemonMemory | quote }}
@@ -41,3 +46,12 @@ spec:
             value: {{ default "1g" .Values.Worker.ExecutorMemory | quote }}
           - name: SPARK_WORKER_WEBUI_PORT
             value: {{ .Values.WebUi.ContainerPort | quote }}
+      volumes:
+        - name: spark-dags
+          hostPath:
+            path: /var/www/spark/dags
+            type: Directory
+        - name: spark-files
+          hostPath:
+            path: /var/www/spark/files
+            type: Directory

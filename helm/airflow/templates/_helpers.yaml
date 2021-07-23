@@ -364,6 +364,8 @@ server_tls_key_file = /etc/pgbouncer/server.key
 {{ define "airflow_dags" -}}
 {{- if .Values.dags.gitSync.enabled -}}
 {{ (printf "%s/dags/%s/%s" .Values.airflowHome .Values.dags.gitSync.dest .Values.dags.gitSync.subPath ) }}
+{{- else if (.Values.dagsHome) -}}
+{{ (printf "%s/dags" .Values.airflowHome) }}
 {{- else -}}
 {{ (printf "%s/dags" .Values.airflowHome) }}
 {{- end -}}
