@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Main" type="Application" factoryName="Application">
+    <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
+    <option name="MAIN_CLASS_NAME" value="Main" />
+    <module name="spark" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="sbt-package" run_configuration_type="SbtRunConfiguration" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="copy spark jar" run_configuration_type="ShConfigurationType" />
+    </method>
+  </configuration>
+</component>
