@@ -13,10 +13,17 @@ currently has the following stack:
 
 We assume intermediate level knowledge of [kubernetes](https://minikube.sigs.k8s.io/) with [helm](https://helm.sh/) for you to be comfortable navigating, extending, developing with this setup.
 
+```shell
+# Please make sure to clone the repository into the /var/www/ folder.
+git clone git@github.com:broekema41/spark-big-data-development-kit.git
+```
+
 ## Required software
 In order to use this Vagrant image, you need to have some software installed. The versions below are known to work:
 * Oracle VM VirtualBox 6.X.XX (https://www.virtualbox.org/wiki/Downloads)
 * Vagrant 2.X.XX (https://releases.hashicorp.com/vagrant/)
+* Java 8.xxxx (advise use of https://sdkman.io/ )
+* git
 
 ## Required Vagrant plugins
 Before starting Vagrant for the first time, you need to install the following Vagrant plugins:
@@ -63,8 +70,19 @@ vagrant halt
 ```
 
 ## Trust CA certificates
-We advise to add the auto generated CA certificate to your 
+We advise to add the auto generated CA certificate to your
 trust store. The certificate wil be located in **/pki/ca.crt** after first startup.
 
 ## Browser access
 You can access the project's environment via https://[application].sparkdev.ilionx.cloud
+
+## Running, Developing Spark (getting started spark app)
+
+This project contains folder ./getting-started-spark-app/ that can get you going. It contains an intellij Scala based project
+that will count and sort the words in this README file. Opening the folder with intellij will give you run configuration (.run folder)
+to start building, run/debug against the cluster.
+
+### Running spark job via the command line
+```shell
+./spark-2.4.6/bin/spark-submit --master spark://172.28.127.137:7077 dags/spark.jar
+```

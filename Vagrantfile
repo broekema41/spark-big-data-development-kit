@@ -49,7 +49,7 @@ Vagrant.configure("2") do |config|
 
   # Mount repos of supported projects
   config.vm.synced_folder "..", "/projects", type: "nfs", nfs_version: $nfsver, mount_options: [ "nolock", "fsc" ]
-  config.vm.synced_folder "./getting-started-spark-app", "/var/www/spark", type: "nfs", nfs_version: $nfsver, mount_options: [ "nolock", "fsc" ]
+  config.vm.synced_folder "/var/www/spark-big-data-development-kit/getting-started-spark-app/", "/var/www/spark-big-data-development-kit/getting-started-spark-app/", type: "nfs", nfs_version: $nfsver, mount_options: [ "nolock", "fsc" ]
 
   # Provision using ansible playbook, ansible should be installed on the image already
   config.vm.provision :ansible_local do |ansible|

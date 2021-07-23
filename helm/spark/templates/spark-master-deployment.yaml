@@ -102,9 +102,9 @@ spec:
               memory: "{{ .Values.Master.Memory }}"
           volumeMounts:
             - name: spark-dags
-              mountPath: /var/www/spark/dags
+              mountPath: /var/www/spark-big-data-development-kit/getting-started-spark-app/dags
             - name: spark-files
-              mountPath: /var/www/spark/files
+              mountPath: /var/www/spark-big-data-development-kit/getting-started-spark-app/files
             - name: host-vhosts
               mountPath: /data/reverseproxy-vhosts
           env:
@@ -122,11 +122,11 @@ spec:
             name: {{ .Release.Name }}-reverseproxy-vhosts-configmap
         - name: spark-dags
           hostPath:
-            path: /var/www/spark/dags
+            path: /var/www/spark-big-data-development-kit/getting-started-spark-app/dags
             type: Directory
         - name: spark-files
           hostPath:
-            path: /var/www/spark/files
+            path: /var/www/spark-big-data-development-kit/getting-started-spark-app/files
             type: Directory
         - name: host-vhosts
           hostPath:

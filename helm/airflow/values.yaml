@@ -32,7 +32,7 @@ gid: 0
 # Airflow home directory
 # Used for mount paths
 airflowHome: /opt/airflow
-dagsHome: /var/www/spark/dags/
+dagsHome: /var/www/spark-big-data-development-kit/getting-started-spark-app/dags/
 
 # Default airflow repository -- overrides all the specific images below
 defaultAirflowRepository: apache/airflow
